@@ -1,0 +1,127 @@
+#include "Graph.h"
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+#include <unordered_set>
+#include <queue>
+#include <set>
+#include <iostream>
+#include <algorithm>
+#include <limits>
+#include <utility>
+#include <stack>
+
+//Node::Node(string symbol) : symbol(symbol){}
+
+Node* Graph::get_node(string symbol){
+    for(auto& node : node_vector){
+        if(node->symbol == symbol){
+            return node;
+        }
+    }
+    return nullptr;
+}
+
+void Graph::change_node(Node* node, int index, bool start){
+    if(!node) return;
+    if(start){
+        node->edges.push_back(make_pair(get<1>(edges_tuples[index]), get<2>(edges_tuples[index])));
+    }else{
+        node->edges.push_back(make_pair(get<0>(edges_tuples[index]), get<2>(edges_tuples[index])));
+    }
+}
+
+Graph::Graph(const char* const & edgelist_csv_fn) {
+    // Create ifstream name file with the provided filename from parameter
+    ifstream file(edgelist_csv_fn);
+    string line;
+
+    // Reads each line from the CSV file using getLine(). Each line = edge
+    while(getline(file, line)){
+        // Parse the line
+        stringstream ss(line);
+
+        // Labels of two nodes and the weight of the edge that connects the two
+        string u_label, v_label;
+        double weight;
+
+        // Extract the two nodes from the stream, seperated by a comma
+        getline(ss, u_label, ',');
+        getline(ss, v_label, ',');
+        // Extract weight directly
+        ss >> weight;
+        edges_tuples.push_back(make_tuple(u_label, v_label, weight));
+    }
+    file.close();
+
+    //construct the graph
+    for(size_t i = 0; i < edges_tuples.size(); i++){
+        change_node(get_node(get<0>(edges_tuples[i])), i, true);
+        change_node(get_node(get<1>(edges_tuples[i])), i, false);
+    }
+}
+
+Graph::~Graph(){
+    node_labels.clear();
+    edges_tuples.clear();
+    for(size_t i = 0; i < node_vector.size(); i++){
+        node_vector[i]->edges.clear();
+        delete node_vector[i];
+    }
+}
+
+unsigned int Graph::num_nodes() {
+    //Returns the size of the nodes_set
+    return node_vector.size();
+}
+
+vector<string> Graph::nodes() {
+    return node_labels;
+}
+
+unsigned int Graph::num_edges() {
+    return edges_tuples.size();
+}
+
+unsigned int Graph::num_neighbors(string const & node_label) {
+    Node* node = get_node(node_label);
+    return node ? node->edges.size() : 0;
+}
+
+double Graph::edge_weight(string const & u_label, string const & v_label) {
+    Node* node = get_node(u_label);
+    if(!node) return -1;
+    for(auto& edge : node->edges){
+        if(edge.first == v_label)
+            return edge.second;
+    }
+    return -1; // Edge not found
+}
+
+vector<string> Graph::neighbors(string const & node_label) {
+    Node* node = get_node(node_label);
+    // Declare vector that will hold all the labels of the neighbors of the given node in parameter
+    vector<string> neighbors_nodes;
+    if(!node) return neighbors_nodes;
+    for(auto& edge : node->edges){
+        neighbors_nodes.push_back(edge.first);
+    }
+    return neighbors_nodes;
+}
+
+vector<string> Graph::shortest_path_unweighted(string const & start_label, string const & end_label) {
+    // If the target node is unreachable, return an empty path
+    return vector<string>();
+}
+
+vector<tuple<string,string,double>> Graph::shortest_path_weighted(string const & start_label, string const & end_label) {   
+    return vector<tuple<string,string,double>>();
+}
+
+vector<vector<string>> Graph::connected_components(double const & threshold) {
+    return vector<vector<string>>();
+}
+
+double Graph::smallest_connecting_threshold(string const & start_label, string const & end_label) {
+    return 0.0;
+}
